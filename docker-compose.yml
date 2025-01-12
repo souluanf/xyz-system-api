@@ -1,0 +1,75 @@
+networks:
+  xyz-network:
+    driver: bridge
+
+volumes:
+  pg_data:
+
+services:
+  app:
+    container_name: app
+    hostname: app
+    env_file:
+      - .env
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      - xyz-network
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:8080/api/actuator/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  db:
+    image: postgres
+    container_name: db
+    hostname: db
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "${DB_PORT}:5432"
+    networks:
+      - xyz-network
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${DB_USER}"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: keycloak
+    env_file:
+      - .env
+    command:
+      - start-dev
+      - --import-realm
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://db:5432/${DB_NAME}
+      KC_DB_USERNAME: ${DB_USER}
+      KC_DB_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - ./auth/realm.json:/opt/keycloak/data/import/realm.json
+    networks:
+      - xyz-network
+    ports:
+      - "8085:8080"
+    depends_on:
+      db:
+        condition: service_healthy

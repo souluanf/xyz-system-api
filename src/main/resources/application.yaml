@@ -1,0 +1,74 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+    encoding:
+      force: true
+  shutdown: graceful
+spring:
+  application:
+    name: xyz-system-api
+  profiles:
+    active: ${xyz-system-api.spring.profiles.active:dev}
+  datasource:
+    url: ${xyz-system-api.datasource.url}
+    password: ${xyz-system-api.datasource.password}
+    username: ${xyz-system-api.datasource.username}
+    hikari:
+      maximum-pool-size: ${xyz-system-api.datasource.hikari.maximum-pool-size}
+  web:
+    resources:
+      add-mappings: false
+  jpa:
+    open-in-view: ${xyz-system-api.jpa.open-in-view}
+    properties:
+      hibernate:
+        id:
+          new_generator_mappings: true
+        enable_lazy_load_no_trans: ${xyz-system-api.jpa.properties.hibernate.enable_lazy_load_no_trans}
+    hibernate:
+      ddl-auto: ${xyz-system-api.jpa.hibernate.ddl-auto}
+    show-sql: ${xyz-system-api.jpa.show-sql}
+  h2:
+    console:
+      enabled: ${xyz-system-api.h2.console.enabled}
+      path: ${xyz-system-api.h2.console.path}
+      settings:
+        web-allow-others: ${xyz-system-api.h2.console.settings.web-allow-others}
+  flyway:
+    enabled: ${xyz-system-api.flyway.enabled}
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    clean-disabled: true
+    out-of-order: false
+  main:
+    allow-bean-definition-overriding: true
+  jackson:
+    default-property-inclusion: non_null
+    time-zone: America/Sao_Paulo
+    serialization:
+      write-dates-as-timestamps: false
+
+  security:
+    oauth2:
+      resource-server:
+        jwt:
+          host: ${xyz-system-api.oidc.host}
+          client-id: ${xyz-system-api.oidc.client-id}
+          realm: ${xyz-system-api.oidc.realm}
+          issuer-uri: ${xyz-system-api.oidc.issuer-uri}
+          jwk-set-uri: ${xyz-system-api.oidc.jwk-set-uri}
+
+springdoc:
+  swagger-ui:
+    enabled: ${xyz-system-api.springdoc.swagger-ui.enabled}
+    operations-sorter: method
+    tags-sorter: alpha
+    display-request-duration: true
+
+logging:
+  pattern:
+    console: "%red(%d{yyyy-MM-dd'T'HH:mm:ssXXX}) %magenta([%thread]) [${spring.application.name}] %highlight(%-5level) %logger{36}.%M - %msg%n"
+
+
+openapi-servers-urls: ${xyz-system-api.openapi-servers-urls}
